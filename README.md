@@ -42,3 +42,19 @@ class CustomTrace() : ITraceable {
     }
 }
 ```
+
+追踪曝光
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        …
+        // TraceSpot: built-in traceable data model
+        fab.traceExpose(asLogPage(), TraceSpot.of("fab_button"))
+        …
+    }
+
+    …
+}
+```
