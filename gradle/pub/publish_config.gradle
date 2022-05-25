@@ -1,0 +1,38 @@
+project.extensions.create('mvn', MvnConfig)
+
+class MvnConfig {
+    String artifact = ''
+    String group = 'cn.alvince.droidprism'
+    String version = ''
+    String name = ''
+    String description = ''
+    String packaging = 'aar'
+
+    void setArtifact(String artifact) {
+        this.artifact = artifact
+    }
+
+    void setGroup(String group) {
+        this.group = group
+    }
+
+    void setVersion(String version) {
+        this.version = version
+    }
+
+    void setName(String name) {
+        this.name = name
+    }
+
+    void setDescription(String description) {
+        this.description = description
+    }
+
+    void setPackaging(String packaging) {
+        this.packaging = packaging
+    }
+
+    String getName() {
+        return name.isEmpty() ? artifact : name
+    }
+}
