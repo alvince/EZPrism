@@ -1,0 +1,3 @@
+rootProject.name = "EZPrism"
+include ':app'
+include ':lib-prism-core'

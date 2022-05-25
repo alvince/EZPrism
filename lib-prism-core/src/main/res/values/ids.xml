@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="view_exposure_listener_holder" type="id" />
+    <item name="view_trace_helper_holder" type="id" />
+</resources>
