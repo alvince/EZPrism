@@ -28,7 +28,18 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
     private var viewExposureHelper: ViewExposureHelper? = null
 
     override fun onOptionChanged(optionName: String) {
-        TODO("Not yet implemented")
+        when (optionName) {
+            "enableExposureTrace" -> {
+                if (option.enableExposureTrace) {
+                    viewExposureHelper
+                        ?.also { applyTraceItemChanged(trace) }
+                        ?: exposureStateHelper?.also { applyViewExposureHelper(it.createViewExposureHelper()) }
+                } else {
+                    // clear exposure helper
+                    targetView?.monitorExposureState(null)
+                }
+            }
+        }
     }
 
     fun attachToView(view: View) {
@@ -109,7 +120,7 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
         }
 
         /**
-         * Create [UniversalTraceHelper] instance with exposure enable specified
+         * Create [ViewTraceHelper] instance with exposure enable specified
          */
         fun create(enableExposure: Boolean = true): ViewTraceHelper {
             return Option().apply {

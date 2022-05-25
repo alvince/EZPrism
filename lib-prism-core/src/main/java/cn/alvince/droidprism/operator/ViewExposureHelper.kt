@@ -14,7 +14,7 @@ class ViewExposureHelper(val stateHelper: ExposureStateHelper) {
         set(value) {
             val original = field
             if (original != value) {
-                original?.let { stateHelper.markExposeState(it, false) }
+                original?.also { stateHelper.markExposeState(it, false) }
                 field = value
                 forceCheck()
             }
@@ -23,7 +23,7 @@ class ViewExposureHelper(val stateHelper: ExposureStateHelper) {
     internal var view: WeakReference<View>? = null
 
     fun forceCheck() {
-        view?.get()?.let { onViewLayoutChange(it, this) }
+        view?.get()?.also { onViewLayoutChange(it, this) }
     }
 }
 
@@ -77,10 +77,9 @@ internal fun View.monitorExposureState(viewExposureHelper: ViewExposureHelper?) 
 }
 
 private fun onViewLayoutChange(v: View, viewExposureHelper: ViewExposureHelper, attachState: Boolean? = null) {
-    val stateHelper = viewExposureHelper.stateHelper
     val traceItem = viewExposureHelper.trace ?: return
     val exposing = isViewExposing(v, attachState)
-    stateHelper.markExposeState(traceItem, exposing)
+    viewExposureHelper.stateHelper.markExposeState(traceItem, exposing)
 }
 
 private fun isViewExposing(v: View, attachState: Boolean?): Boolean {

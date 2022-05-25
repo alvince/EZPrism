@@ -1,9 +1,18 @@
 package cn.alvince.droidprism.util
 
 import android.view.View
-import cn.alvince.droidprism.operator.ViewExposureHelper
-import cn.alvince.droidprism.operator.monitorExposureState
+import cn.alvince.droidprism.log.ILogPage
+import cn.alvince.droidprism.log.ITraceable
+import cn.alvince.droidprism.operator.ViewTraceHelper
 
-fun ViewExposureHelper.watch(view: View) {
-    view.monitorExposureState(this)
+fun View.traceExpose(page: ILogPage, trace: ITraceable) {
+    getTraceHelper().apply {
+        this.trace = trace
+        this.exposureStateHelper = page.exposureStateHelper
+    }
+}
+
+fun View.getTraceHelper(): ViewTraceHelper {
+    return ViewTraceHelper.from(this)
+        ?: ViewTraceHelper.create().also { it.attachToView(this) }
 }

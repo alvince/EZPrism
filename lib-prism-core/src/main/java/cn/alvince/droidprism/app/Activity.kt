@@ -8,10 +8,8 @@ import androidx.collection.SparseArrayCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import cn.alvince.droidprism.EZPrism
-import cn.alvince.droidprism.internal.Instrumentation
-import cn.alvince.droidprism.internal.getOrPut
+import cn.alvince.droidprism.internal.*
 import cn.alvince.droidprism.internal.lifecycle.observeWith
-import cn.alvince.droidprism.internal.runOnMain
 import cn.alvince.droidprism.log.ExposureStateHelper
 import cn.alvince.droidprism.log.ILogPage
 import cn.alvince.droidprism.log.impl.LogPageDelegate
@@ -42,10 +40,10 @@ val Activity.logExposeStateHelper: ExposureStateHelper?
 
 private val activityPageCache = SparseArrayCompat<ActivityPageRecord>()
 
-private fun Activity.obtainLogPage(): ILogPage {
+private fun Activity.obtainLogPage(name: String = ""): ILogPage {
     val k = this.hashCode()
     return activityPageCache.getOrPut(k) {
-        ActivityPageRecord(k, this, LogPageDelegate())
+        ActivityPageRecord(k, this, LogPageDelegate(name))
     }
         .page
 }
@@ -119,6 +117,7 @@ private class ActivityPageRecord(private val key: Int, activity: Activity, val p
     }
 
     private fun dispatchPageShowChanged(show: Boolean) {
+        logDIfDebug { "dispatch page show: [$show] ${page.pageName().name} : ${target.get()}" }
         page.onPageShowingChanged(show)
     }
 
@@ -126,8 +125,9 @@ private class ActivityPageRecord(private val key: Int, activity: Activity, val p
         if (_disposed) {
             return
         }
+        logDIfDebug { "dispose page: ${page.pageName().name}, ${target.get()}" }
         page.onPageShowingChanged(false)
         _disposed = true
-        activityPageCache.remove(key)
+        postOnMain { activityPageCache.remove(key) }
     }
 }

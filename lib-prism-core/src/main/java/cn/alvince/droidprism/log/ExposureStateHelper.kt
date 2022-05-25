@@ -3,6 +3,7 @@ package cn.alvince.droidprism.log
 import androidx.collection.ArraySet
 import androidx.collection.arrayMapOf
 import cn.alvince.droidprism.internal.Instrumentation
+import cn.alvince.droidprism.internal.logDIfDebug
 import cn.alvince.droidprism.internal.mainHandler
 import cn.alvince.zanpakuto.core.property.ObservableProperty
 import cn.alvince.zanpakuto.core.time.Timestamp
@@ -21,11 +22,7 @@ class ExposureStateHelper internal constructor() {
     private val stateMap = arrayMapOf<ITraceable, TraceItemState>()
 
     fun markExposeState(traceItem: ITraceable, showing: Boolean) {
-        val hasChanged = if (showing) {
-            traceElements.add(traceItem)
-        } else {
-            traceElements.remove(traceItem)
-        }
+        val hasChanged = if (showing) traceElements.add(traceItem) else traceElements.remove(traceItem)
         if (hasChanged && pageShowing) {
             val state = getState(traceItem)
             if (state.showing != showing) {
@@ -58,22 +55,25 @@ class ExposureStateHelper internal constructor() {
         private fun changeShowingState(showing: Boolean) {
             if (showing) {
                 lastShowTime = Timestamp.now()
-                if (lastShowTime - lastHideTime >= Instrumentation.exposeTimeThreshold || hasCancelledScheduling) {
-                    var r = scheduleExposeEvent
-                    if (r == null) {
-                        r = Runnable {
+                val interval = Instrumentation.exposeTimeThreshold
+                if (lastShowTime - lastHideTime >= interval || hasCancelledScheduling) {
+                    val r = scheduleExposeEvent
+                        ?: Runnable {
+                            logDIfDebug { "request emit expose event: $trace" }
                             Instrumentation.emitExposeEventIfNotTooFrequent(trace)
                             scheduled = false
-                        }.also { scheduleExposeEvent = it }
-                    }
+                        }.also {
+                            scheduleExposeEvent = it
+                        }
+                    logDIfDebug { "schedule delayed expose event: $trace" }
                     scheduled = true
-                    mainHandler.postDelayed(r, Instrumentation.exposeTimeThreshold.inMillis)
+                    mainHandler.postDelayed(r, interval.inMillis)
                 }
                 hasCancelledScheduling = false
             } else {
                 lastHideTime = Timestamp.now()
                 hasCancelledScheduling = scheduled
-                scheduleExposeEvent?.let {
+                scheduleExposeEvent?.also {
                     mainHandler.removeCallbacks(it)
                     scheduled = false
                 }

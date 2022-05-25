@@ -7,6 +7,8 @@ import cn.alvince.droidprism.EZPrism
 import cn.alvince.droidprism.internal.Instrumentation
 import cn.alvince.droidprism.internal.getOrPut
 import cn.alvince.droidprism.internal.lifecycle.observeWith
+import cn.alvince.droidprism.internal.logDIfDebug
+import cn.alvince.droidprism.internal.postOnMain
 import cn.alvince.droidprism.log.ExposureStateHelper
 import cn.alvince.droidprism.log.ILogPage
 import cn.alvince.droidprism.log.impl.LogPageDelegate
@@ -37,10 +39,10 @@ val Fragment.logExposeStateHelper: ExposureStateHelper?
 
 private val fragmentPageCache = SparseArrayCompat<FragmentPageRecord>()
 
-private fun Fragment.obtainLogPage(): ILogPage {
+private fun Fragment.obtainLogPage(name: String = ""): ILogPage {
     val k = this.hashCode()
     return fragmentPageCache.getOrPut(k) {
-        FragmentPageRecord(k, this, LogPageDelegate())
+        FragmentPageRecord(k, this, LogPageDelegate(name))
     }
         .page
 }
@@ -54,11 +56,11 @@ private class FragmentPageRecord(private val key: Int, fragment: Fragment, val p
     init {
         fragment.observeWith { _, event ->
             if (event < Lifecycle.Event.ON_PAUSE) {
-                page.onPageShowingChanged(true)
+                dispatchPageShowChanged(true)
                 return@observeWith
             }
             if (event < Lifecycle.Event.ON_DESTROY) {
-                page.onPageShowingChanged(false)
+                dispatchPageShowChanged(false)
                 return@observeWith
             }
             if (event == Lifecycle.Event.ON_DESTROY) {
@@ -67,12 +69,18 @@ private class FragmentPageRecord(private val key: Int, fragment: Fragment, val p
         }
     }
 
+    private fun dispatchPageShowChanged(show: Boolean) {
+        logDIfDebug { "dispatch page show: [$show] ${page.pageName().name} : ${target.get()}" }
+        page.onPageShowingChanged(show)
+    }
+
     private fun dispose() {
         if (_disposed) {
             return
         }
+        logDIfDebug { "dispose page: ${page.pageName().name}, ${target.get()}" }
         page.onPageShowingChanged(false)
         _disposed = true
-        fragmentPageCache.remove(key)
+        postOnMain { fragmentPageCache.remove(key) }
     }
 }

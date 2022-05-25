@@ -1,25 +1,32 @@
 package cn.alvince.droidprism.log.impl
 
+import cn.alvince.droidprism.internal.PAGE_UNDEFINED
 import cn.alvince.droidprism.log.ExposureStateHelper
 import cn.alvince.droidprism.log.ILogPage
+import cn.alvince.droidprism.log.IPageName
+import cn.alvince.droidprism.log.PageNameOf
+import cn.alvince.zanpakuto.core.text.takeIfNotEmpty
 
-class LogPageDelegate : ILogPage {
+class LogPageDelegate(name: String) : ILogPage {
 
     override val exposureStateHelper: ExposureStateHelper
         get() {
             return _exposureStateHelper
                 ?: ExposureStateHelper().apply {
                     _exposureStateHelper = this
-                    pageShowing = showing
+                    pageShowing = _showing
                 }
         }
 
-    private var _exposureStateHelper: ExposureStateHelper? = null
+    private val pageName = name.takeIfNotEmpty()?.let { PageNameOf(name) } ?: PAGE_UNDEFINED
 
-    private var showing: Boolean = false
+    private var _exposureStateHelper: ExposureStateHelper? = null
+    private var _showing: Boolean = false
 
     override fun onPageShowingChanged(show: Boolean) {
-        showing = show
+        _showing = show
         exposureStateHelper.pageShowing = show
     }
+
+    override fun pageName(): IPageName = pageName
 }

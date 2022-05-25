@@ -14,8 +14,6 @@ internal object TraceShooter {
     }
 
     fun sendWithCommonFields(type: ActionType, logData: JSONObject) {
-        Instrumentation.traverseSink {
-            it.sink(type, logData)
-        }
+        Instrumentation.traverseSink { it.sink(type, logData) }
     }
 }

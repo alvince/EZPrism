@@ -26,9 +26,17 @@ internal fun <T> SparseArrayCompat<T>.getOrPut(key: Int, supplier: () -> T): T {
 }
 
 internal fun runOnMain(block: () -> Unit) {
-    if (Looper.getMainLooper().thread == Thread.currentThread()) {
+    if (Looper.getMainLooper().thread === Thread.currentThread()) {
         block()
     } else {
         mainHandler.post(block)
     }
+}
+
+internal fun postOnMain(delayed: Long = 0L, block: () -> Unit) {
+    if (delayed > 0L) {
+        mainHandler.postDelayed(block, delayed)
+        return
+    }
+    mainHandler.post(block)
 }

@@ -20,13 +20,13 @@ task clean(type: Delete) {
 
 allprojects {
     repositories {
+        mavenCentral()
+        maven { url = 'https://maven.aliyun.com/repository/google' }
+        maven { url = 'https://maven.aliyun.com/repository/public' }
         maven {
             name 'maven-snapshot'
             url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
         }
-        maven { url = 'https://maven.aliyun.com/repository/google' }
-        maven { url = 'https://maven.aliyun.com/repository/public' }
-        mavenCentral()
     }
 }
 

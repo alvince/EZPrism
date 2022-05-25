@@ -9,8 +9,9 @@ import java.util.concurrent.TimeUnit
 
 internal object Instrumentation {
 
-    internal val exposeTimeThreshold: Duration get() = if (customExposeTimeThreshold != Duration.ZERO) defaultExposeTimeThreshold else customExposeTimeThreshold
     internal val eventEmitter = TraceEmitter()
+
+    internal val exposeTimeThreshold: Duration get() = customExposeTimeThreshold.takeIf { it != Duration.ZERO } ?: defaultExposeTimeThreshold
 
     internal var devMode: Boolean = false
 

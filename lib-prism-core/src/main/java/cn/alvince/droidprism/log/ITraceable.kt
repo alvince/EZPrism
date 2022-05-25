@@ -17,21 +17,25 @@ interface ITraceable {
         private val exposeTimeCleanupThreshold = Duration.of(1, TimeUnit.MINUTES)
         private var lastCleanupTime = Timestamp.ZERO
 
-        internal fun checkExposeNotTooFrequent(traceItem: ITraceable): Boolean {
+        internal fun checkExposeNotTooFrequent(trace: ITraceable): Boolean {
             val now = Timestamp.now()
             if (now - lastCleanupTime > exposeTimeCleanupThreshold) {
-                val iterator = exposeMonitorMap.iterator()
-                while (iterator.hasNext()) {
-                    val (_, time) = iterator.next()
-                    if (now - time > exposeTimeThreshold) {
-                        iterator.remove()
+                var cleared = false
+                exposeMonitorMap.iterator().also { iterator ->
+                    while (iterator.hasNext()) {
+                        val (_, time) = iterator.next()
+                        if (now - time > exposeTimeThreshold) {
+                            iterator.remove()
+                            cleared = cleared || true
+                        }
                     }
                 }
+                if (cleared) lastCleanupTime = now
             }
-            if (exposeMonitorMap[traceItem].let { it != null && now - it < exposeTimeThreshold }) {
+            if (exposeMonitorMap[trace].let { it != null && now - it < exposeTimeThreshold }) {
                 return false
             }
-            exposeMonitorMap[traceItem] = now
+            exposeMonitorMap[trace] = now
             return true
         }
     }
