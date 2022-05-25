@@ -5,7 +5,3 @@ interface ILogPage {
 
     fun onPageShowingChanged(show: Boolean)
 }
-
-fun simpleLogPage() {
-
-}
