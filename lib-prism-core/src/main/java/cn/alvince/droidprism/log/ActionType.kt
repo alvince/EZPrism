@@ -2,6 +2,13 @@ package cn.alvince.droidprism.log
 
 import org.json.JSONObject
 
+/**
+ * Trace action type enumerate
+ *
+ * Created by alvince on 2022/5/23
+ *
+ * @author alvince.zy@gmail.com
+ */
 enum class ActionType(val typeName: String) {
 
     /**

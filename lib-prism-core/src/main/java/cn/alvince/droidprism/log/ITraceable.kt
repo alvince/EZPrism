@@ -1,10 +1,18 @@
 package cn.alvince.droidprism.log
 
+import cn.alvince.droidprism.internal.Instrumentation
 import cn.alvince.zanpakuto.core.time.Duration
 import cn.alvince.zanpakuto.core.time.Timestamp
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
+/**
+ * Traceable data defined
+ *
+ * Created by alvince on 2022/5/23
+ *
+ * @author alvince.zy@gmail.com
+ */
 interface ITraceable {
 
     fun toActionJson(actionType: ActionType): JSONObject
@@ -13,18 +21,18 @@ interface ITraceable {
 
     companion object {
         private val exposeMonitorMap = mutableMapOf<ITraceable, Timestamp>()
-        private val exposeTimeThreshold = Duration.of(10, TimeUnit.SECONDS)
         private val exposeTimeCleanupThreshold = Duration.of(1, TimeUnit.MINUTES)
         private var lastCleanupTime = Timestamp.ZERO
 
         internal fun checkExposeNotTooFrequent(trace: ITraceable): Boolean {
             val now = Timestamp.now()
+            val frequencyLimit = Instrumentation.exposeFrequencyThreshold
             if (now - lastCleanupTime > exposeTimeCleanupThreshold) {
                 var cleared = false
                 exposeMonitorMap.iterator().also { iterator ->
                     while (iterator.hasNext()) {
                         val (_, time) = iterator.next()
-                        if (now - time > exposeTimeThreshold) {
+                        if (now - time > frequencyLimit) {
                             iterator.remove()
                             cleared = cleared || true
                         }
@@ -32,7 +40,7 @@ interface ITraceable {
                 }
                 if (cleared) lastCleanupTime = now
             }
-            if (exposeMonitorMap[trace].let { it != null && now - it < exposeTimeThreshold }) {
+            if (exposeMonitorMap[trace].let { it != null && now - it < frequencyLimit }) {
                 return false
             }
             exposeMonitorMap[trace] = now

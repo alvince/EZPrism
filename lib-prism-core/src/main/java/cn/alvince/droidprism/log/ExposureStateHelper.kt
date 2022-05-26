@@ -8,6 +8,13 @@ import cn.alvince.droidprism.internal.mainHandler
 import cn.alvince.zanpakuto.core.property.ObservableProperty
 import cn.alvince.zanpakuto.core.time.Timestamp
 
+/**
+ * [ITraceable] exposure state handler
+ *
+ * Created by alvince on 2022/5/23
+ *
+ * @author alvince.zy@gmail.com
+ */
 class ExposureStateHelper internal constructor() {
 
     var pageShowing: Boolean by ObservableProperty(false) { show ->

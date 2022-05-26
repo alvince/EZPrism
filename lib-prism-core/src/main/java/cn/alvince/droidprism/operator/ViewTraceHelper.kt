@@ -11,6 +11,13 @@ import cn.alvince.zanpakuto.core.property.NullableProperty
 import cn.alvince.zanpakuto.core.property.ObservableProperty
 import java.lang.ref.WeakReference
 
+/**
+ * Universal [android.view.View] trace handler
+ *
+ * Created by alvince on 2022/5/23
+ *
+ * @author alvince.zy@gmail.com
+ */
 class ViewTraceHelper(internal val option: Option): Option.Observer {
 
     var trace: ITraceable? by NullableProperty { value -> applyTraceItemChanged(value) }

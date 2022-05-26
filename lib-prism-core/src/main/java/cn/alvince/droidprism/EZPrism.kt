@@ -5,6 +5,11 @@ import cn.alvince.zanpakuto.core.time.Duration
 import java.util.concurrent.TimeUnit
 
 /**
+ * EZPrism access entrance
+ *
+ * Created by alvince on 2022/5/23
+ *
+ * @author alvince.zy@gmail.com
  * @see [EZPrism](https://github.com/alvince/EZPrism)
  */
 object EZPrism {
@@ -24,8 +29,16 @@ object EZPrism {
     /**
      * Set custom time threshold in milliseconds for view expose detect
      */
-    fun setCustomExposeTimeThreshold(timeInMillis: Long): EZPrism = this.apply {
+    fun setExposeTimeThreshold(timeInMillis: Long): EZPrism = this.apply {
         require(timeInMillis > 0) { "A threshold greater than 0 ms should be set." }
         Instrumentation.setCustomExposeTimeThreshold(Duration.of(timeInMillis, TimeUnit.MILLISECONDS))
+    }
+
+    /**
+     * Set custom time threshold in milliseconds for exposure data frequency
+     */
+    fun setExposeFrequencyThreshold(timeInMillis: Long): EZPrism = this.apply {
+        require(timeInMillis > 0) { "A threshold greater than 0 ms should be set." }
+        Instrumentation.setCustomExposeFrequencyThreshold(Duration.of(timeInMillis, TimeUnit.MILLISECONDS))
     }
 }

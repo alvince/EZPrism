@@ -7,6 +7,13 @@ import cn.alvince.droidprism.log.IPageName
 import cn.alvince.droidprism.log.PageNameOf
 import cn.alvince.zanpakuto.core.text.takeIfNotEmpty
 
+/**
+ * [ILogPage] implementation for delegate page base behaviors
+ *
+ * Created by alvince on 2022/5/23
+ *
+ * @author alvince.zy@gmail.com
+ */
 class LogPageDelegate(name: String) : ILogPage {
 
     override val exposureStateHelper: ExposureStateHelper

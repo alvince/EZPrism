@@ -1,6 +1,9 @@
 EZPrism
 ===
 
+EZPrism 是为 `Android` 上运行的应用程序提供数据埋点能力的中间件  
+系统基于 `View` 的行为监听，以及抽象的 `Page` 和 `Trace` 构建出的高度可扩展的埋点能力框架
+
 __Snapshot, add config:__
 ```groovy
 repositories {
@@ -17,7 +20,7 @@ dependencies {
 }
 ```
 
-接入使用
+使用
 ---
 
 配置
@@ -58,3 +61,10 @@ class MainActivity : AppCompatActivity() {
     …
 }
 ```
+
+说明
+---
+
+主要概念：
+- 页面：ILogPage. 埋点事件以页面为单位整合管理，事件行为依赖所属页面的状态
+- 事件：ITraceable. 埋点事件的数据载体，设计为接口可自由实现为业务所需的数据结构
