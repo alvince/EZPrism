@@ -2,21 +2,19 @@ EZPrism
 ===
 
 EZPrism 是为 `Android` 上运行的应用程序提供埋点数据收集能力的中间件  
-系统基于 `View` 的行为监听，以及抽象的 `Page` 和 `Trace` 构建出的高度可扩展的埋点能力框架
+系统基于 `View` 的行为监听，以及抽象的 `Page` 和 `Trace` 构建出的可扩展的埋点能力框架
 
-__Snapshot, add config:__
+__~~Snapshot, add config:~~__
 ```groovy
-repositories {
-    maven {
-        url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-    }
-}
+// repositories {
+//     maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
+// }
 ```
 
 Dependency
 ```groovy
 dependencies {
-    implementation 'cn.alvince.droidprism:ezprism:0.0.1-SNAPSHOT'
+    implementation 'cn.alvince.droidprism:ezprism:0.0.2'
 }
 ```
 
@@ -30,7 +28,8 @@ dependencies {
 ```kotlin
 EZPrism.devMode(true) // 开启调试日志
     .useRawPage() // 使用原生页面（Activity/Fragment) 直接作为逻辑页面
-    .addPrinter(CustomPrismLogcatSink()) // 添加日志输出记录，自定埋点数据的上报实现（logcat 日志，文件 I/O, 网络上传，委托三方 SDK 上报等）
+    /* 添加日志输出记录，实现埋点数据的自定义上报逻辑（logcat 日志，文件 I/O, 网络上传，委托三方 SDK 上报等）*/
+    .addPrinter(CustomPrismLogcatSink())
 ```
 
 #### 自定义日志数据类
@@ -40,11 +39,11 @@ App 自定义埋点数据类，用于承载埋点数据和，及实现 json 序�
 ```kotlin
 class CustomTrace() : ITraceable {
 
-    fun toActionJson(actionType: ActionType): JSONObject {
+    override fun toActionJson(actionType: ActionType): JSONObject {
         // 根据 action 类型序列化输出
     }
 
-    fun toExposeJson(): JSONObject {
+    override fun toExposeJson(): JSONObject {
         // 曝光数据序列化输出
     }
 }
@@ -101,6 +100,21 @@ class MainActivity : AppCompatActivity() {
 主要概念：
 - 页面：`ILogPage`. 埋点事件以页面为单位整合管理，事件行为依赖所属页面的状态
 - 事件：`ITraceable`. 埋点事件的数据载体，设计为接口可自由实现为业务所需的数据结构
-- 埋点跟踪辅助器：`ViewTraceHelper`. 视图 `View` 埋点触发的辅助对象，与 `View` 一一对应
-- 视图曝光辅助器：`ViewExposureHelper`. 视图 `View` 曝光状态侦听
+- 埋点跟踪辅助器：`ViewTraceHelper`. 视图 `View` 埋点曝光组件，与 `View` 一一对应
 - 曝光状态辅助器：`ExposureStateHelper`. 数据曝光状态管理辅助器，与 `ILogPage` 一一对应
+
+Changes:
+---
+
+### 0.0.2
+
+feature:
+
+- 增加新的曝光模式：视图不可见时触发
+  ```kotlin
+  class CustomTrace : ITraceable, ITraceWhenInvisibleWithDuration by SimpleDuration() {
+      …
+  }
+  ```
+  携带一次从可见到不可见的曝光时长 `duration`
+- 优化：删除了冗余的组件: `ViewExposureHelper`，直接又 `ViewTraceHelper` 控制曝光和埋点数据

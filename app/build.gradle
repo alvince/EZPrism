@@ -47,7 +47,7 @@ dependencies {
     if (localMode) {
         implementation project(':lib-prism-core')
     } else {
-        implementation('cn.alvince.droidprism:ezprism:0.0.1-SNAPSHOT') { changing = true }
+        implementation('cn.alvince.droidprism:ezprism:0.0.2')
     }
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

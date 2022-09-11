@@ -55,7 +55,7 @@ subprojects {
             project.ext.propFromConfigOrEnv = { name ->
                 def value = rootProject.ext.localProps.getProperty(name)
                 if (value != null && !value.empty) return value
-                value = project.getProperty(name)
+                if (project.hasProperty(name)) value = project.getProperty(name)
                 if (value != null && !value.empty) return value
                 value = System.getenv(name)
                 return value != null ? value : ""
@@ -156,7 +156,9 @@ subprojects {
                     def repoUsername = project.propFromConfigOrEnv('ossrhUsername')
                     def repoPassword = project.propFromConfigOrEnv('ossrhPassword')
                     if (repoUsername.isEmpty() || repoPassword.isEmpty()) {
-                        throw new IllegalStateException("Should set properties ossrhUsername and ossrhPassword")
+                        logger.log(LogLevel.ERROR, "Should set properties ossrhUsername and ossrhPassword")
+                        return
+//                        throw new IllegalStateException("Should set properties ossrhUsername and ossrhPassword")
                     }
                     println "credentials: username[$repoUsername], password[$repoPassword]"
                     maven {

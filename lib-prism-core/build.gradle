@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-version "0.0.1-SNAPSHOT"
+version "0.0.2"
 
 apply from: '../gradle/pub/publish_config.gradle'
 
