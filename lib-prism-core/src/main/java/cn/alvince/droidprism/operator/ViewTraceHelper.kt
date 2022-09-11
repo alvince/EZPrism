@@ -18,29 +18,27 @@ import java.lang.ref.WeakReference
  *
  * @author alvince.zy@gmail.com
  */
-class ViewTraceHelper internal constructor(private val option: Option) : Option.Observer {
+class ViewTraceHelper internal constructor(val option: ViewTraceOption) : ViewTraceOption.Observer, IViewExposureController {
+
+    override val traceable: ITraceable? get() = trace
+
+    override val stateManager: ExposureStateHelper? get() = exposureStateHelper
 
     var trace: ITraceable? by NullableProperty { value -> applyTraceItemChanged(value) }
 
     var exposureStateHelper: ExposureStateHelper? by NullableProperty { value ->
-        value?.createViewExposureHelper()
-            ?.also {
-                applyViewExposureHelper(it)
-            }
+        value?.also { applyViewExposureHelper() }
     }
 
     private val targetView: View? get() = targetViewRef?.get()
 
     private var targetViewRef: WeakReference<View>? = null
-    private var viewExposureHelper: ViewExposureHelper? = null
 
     override fun onOptionChanged(optionName: String) {
         when (optionName) {
             "enableExposureTrace" -> {
                 if (option.enableExposureTrace) {
-                    viewExposureHelper
-                        ?.also { applyTraceItemChanged(trace) }
-                        ?: exposureStateHelper?.also { applyViewExposureHelper(it.createViewExposureHelper()) }
+                    exposureStateHelper?.also { applyViewExposureHelper() }
                 } else {
                     // clear exposure helper
                     targetView?.monitorExposureState(null)
@@ -58,11 +56,14 @@ class ViewTraceHelper internal constructor(private val option: Option) : Option.
         // attach to new target
         view.setTag(R.id.view_trace_helper_holder, this)
         targetViewRef = WeakReference(view)
-        viewExposureHelper
-            ?.takeIf { option.enableExposureTrace }
-            ?.also {
-                view.monitorExposureState(it)
-            }
+        if (option.enableExposureTrace) {
+            view.monitorExposureState(this)
+        }
+    }
+
+    fun deactivate() {
+        detachFromView()
+        trace = null
     }
 
     private fun detachFromView() {
@@ -76,29 +77,19 @@ class ViewTraceHelper internal constructor(private val option: Option) : Option.
         }
     }
 
-    fun deactivate() {
-        detachFromView()
-        trace = null
-    }
-
     private fun applyTraceItemChanged(trace: ITraceable?) {
         if (option.enableExposureTrace) {
-            viewExposureHelper?.trace = trace
+            trace?.also { exposureStateHelper?.markExposeState(it, false) }
+            targetView?.also { forceCheck(it) }
         }
     }
 
-    private fun applyViewExposureHelper(exposureHelper: ViewExposureHelper) {
+    private fun applyViewExposureHelper() {
+        trace ?: return
         if (!option.enableExposureTrace) {
             return
         }
-        if (viewExposureHelper === exposureHelper) {
-            return
-        }
-        viewExposureHelper = exposureHelper
-            .also {
-                it.trace = this.trace
-            }
-        targetView?.monitorExposureState(exposureHelper)
+        targetView?.monitorExposureState(this)
     }
 
     companion object {
@@ -130,7 +121,7 @@ class ViewTraceHelper internal constructor(private val option: Option) : Option.
          */
         @JvmStatic
         fun create(enableExposure: Boolean = true): ViewTraceHelper {
-            return Option().apply {
+            return ViewTraceOption().apply {
                 enableExposureTrace = enableExposure
             }.let {
                 ViewTraceHelper(it)
@@ -139,7 +130,7 @@ class ViewTraceHelper internal constructor(private val option: Option) : Option.
     }
 }
 
-internal class Option {
+class ViewTraceOption {
 
     interface Observer {
         fun onOptionChanged(optionName: String)
