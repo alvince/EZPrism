@@ -6,6 +6,7 @@ import cn.alvince.droidprism.internal.Instrumentation
 import cn.alvince.droidprism.internal.logDIfDebug
 import cn.alvince.droidprism.internal.mainHandler
 import cn.alvince.zanpakuto.core.property.ObservableProperty
+import cn.alvince.zanpakuto.core.time.Duration
 import cn.alvince.zanpakuto.core.time.Timestamp
 
 /**
@@ -29,11 +30,13 @@ class ExposureStateHelper internal constructor() {
     private val stateMap = arrayMapOf<ITraceable, TraceItemState>()
 
     fun markExposeState(traceItem: ITraceable, showing: Boolean) {
+        logDIfDebug { "mark expose state: $showing - $traceItem" }
         val hasChanged = if (showing) traceElements.add(traceItem) else traceElements.remove(traceItem)
         if (hasChanged && pageShowing) {
-            val state = getState(traceItem)
-            if (state.showing != showing) {
-                state.showing = showing
+            getState(traceItem).also { state ->
+                if (state.showing != showing) {
+                    state.showing = showing
+                }
             }
         }
     }
@@ -47,44 +50,86 @@ class ExposureStateHelper internal constructor() {
         }
     }
 
-    private inner class TraceItemState(val trace: ITraceable) {
+    private class TraceItemState(val trace: ITraceable) : Runnable {
 
         var lastShowTime: Timestamp = Timestamp.ZERO
         var lastHideTime: Timestamp = Timestamp.ZERO
 
         var showing: Boolean by ObservableProperty(false) { changeShowingState(it) }
 
-        private var scheduleExposeEvent: Runnable? = null
+        private val traceWhenInvisible: Boolean = trace is ITraceWhenInvisible
 
         private var scheduled = false
         private var hasCancelledScheduling = false
 
-        private fun changeShowingState(showing: Boolean) {
-            if (showing) {
-                lastShowTime = Timestamp.now()
-                val interval = Instrumentation.exposeTimeThreshold
-                if (lastShowTime - lastHideTime >= interval || hasCancelledScheduling) {
-                    val r = scheduleExposeEvent
-                        ?: Runnable {
-                            logDIfDebug { "request emit expose event: $trace" }
-                            Instrumentation.emitExposeEventIfNotTooFrequent(trace)
-                            scheduled = false
-                        }.also {
-                            scheduleExposeEvent = it
-                        }
-                    logDIfDebug { "schedule delayed expose event: $trace" }
-                    scheduled = true
-                    mainHandler.postDelayed(r, interval.inMillis)
-                }
-                hasCancelledScheduling = false
-            } else {
-                lastHideTime = Timestamp.now()
-                hasCancelledScheduling = scheduled
-                scheduleExposeEvent?.also {
-                    mainHandler.removeCallbacks(it)
-                    scheduled = false
-                }
+        private var exposureDuration: Duration = Duration.ZERO
+
+        override fun run() {
+            logDIfDebug { "request emit expose event: $trace" }
+            trace.also {
+                beforeTryEmitEvent(it)
+                Instrumentation.emitExposeEventIfNotTooFrequent(it)
+                (it as? ITraceWhenInvisibleWithDuration)?.duration = Duration.ZERO
             }
+            scheduled = false
+        }
+
+        private fun beforeTryEmitEvent(trace: ITraceable) {
+            (trace as? ITraceWhenInvisibleWithDuration)?.duration = exposureDuration
+        }
+
+        private fun changeShowingState(showing: Boolean) {
+            logDIfDebug { "change trace state: $showing - $trace" }
+            val now = Timestamp.now()
+            if (showing) {
+                lastShowTime = now
+            } else {
+                lastHideTime = now
+            }
+            if (traceWhenInvisible) {
+                checkStateOrEmitWhenInvisible(showing, now)
+            } else {
+                checkStateOrEmit(showing, now)
+            }
+        }
+
+        private fun clearScheduler() {
+            hasCancelledScheduling = scheduled
+            mainHandler.removeCallbacks(this)
+            scheduled = false
+            exposureDuration = Duration.ZERO
+            (trace as? ITraceWhenInvisibleWithDuration)?.duration = Duration.ZERO
+        }
+
+        private fun checkStateOrEmit(showing: Boolean, now: Timestamp) {
+            if (!showing) {
+                clearScheduler()
+                return
+            }
+            val threshold = Instrumentation.exposeTimeThreshold
+            if (now - lastHideTime >= threshold || hasCancelledScheduling) {
+                logDIfDebug { "schedule delayed expose event: $trace" }
+                scheduled = true
+                mainHandler.postDelayed(this, threshold.inMillis)
+            }
+            hasCancelledScheduling = false
+        }
+
+        private fun checkStateOrEmitWhenInvisible(showing: Boolean, now: Timestamp) {
+            if (showing) {
+                clearScheduler()
+                return
+            }
+            val threshold = Instrumentation.exposeTimeThreshold
+            val interval = now - lastShowTime
+            // require the target has been shown once
+            if (lastShowTime > Timestamp.ZERO && (interval >= threshold || hasCancelledScheduling)) {
+                logDIfDebug { "schedule delayed expose event: $trace" }
+                scheduled = true
+                exposureDuration = interval
+                mainHandler.postDelayed(this, threshold.inMillis)
+            }
+            hasCancelledScheduling = false
         }
     }
 }

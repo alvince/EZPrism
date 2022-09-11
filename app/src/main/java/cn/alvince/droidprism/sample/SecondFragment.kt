@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import cn.alvince.droidprism.app.asLogPage
-import cn.alvince.droidprism.log.TraceSpot
 import cn.alvince.droidprism.sample.databinding.FragmentSecondBinding
+import cn.alvince.droidprism.sample.trace.SampleTrace
 import cn.alvince.droidprism.util.traceExpose
 
 /**
@@ -39,7 +39,7 @@ class SecondFragment : Fragment() {
             findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
         }
 
-        binding.buttonSecond.traceExpose(asLogPage(), TraceSpot.of("second_button"))
+        binding.buttonSecond.traceExpose(asLogPage(), SampleTrace("second_button"))
     }
 
     override fun onDestroyView() {

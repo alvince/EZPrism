@@ -3,8 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/MainFragment">
+    <fragment
+        android:id="@+id/MainFragment"
+        android:name="cn.alvince.droidprism.sample.MainFragment"
+        android:label="@string/main_fragment_label"
+        tools:layout="@layout/main_fragment">
 
+        <action
+            android:id="@+id/action_home_to_simple_case"
+            app:destination="@id/FirstFragment" />
+
+        <action
+            android:id="@+id/action_home_to_list_case"
+            app:destination="@id/ListFragment" />
+    </fragment>
     <fragment
         android:id="@+id/FirstFragment"
         android:name="cn.alvince.droidprism.sample.FirstFragment"
@@ -25,4 +38,9 @@
             android:id="@+id/action_SecondFragment_to_FirstFragment"
             app:destination="@id/FirstFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/ListFragment"
+        android:name="cn.alvince.droidprism.sample.list.TraceListFragment"
+        android:label="@string/list_fragment_label"
+        tools:layout="@layout/trace_list_fragment" />
 </navigation>

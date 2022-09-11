@@ -2,10 +2,16 @@
     <string name="app_name">EZPrism</string>
     <string name="title_activity_main">MainActivity</string>
     <!-- Strings used for fragments for navigation -->
+    <string name="main_fragment_label">Home</string>
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
+    <string name="list_fragment_label">List Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
+
+    <string name="trace_list_exposure_mode_label">Expose when invisible</string>
+    <string name="trace_list_exposure_mode_normal">Trace event while view visible to user</string>
+    <string name="trace_list_exposure_mode_invisible">Trace event while view invisible to user, with exposure duration</string>
 
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris

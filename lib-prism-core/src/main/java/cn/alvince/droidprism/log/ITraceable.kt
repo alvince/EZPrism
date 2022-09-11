@@ -17,7 +17,7 @@ interface ITraceable {
 
     fun toActionJson(actionType: ActionType): JSONObject
 
-    fun toExposeJson(): JSONObject
+    fun toExposeJson(): JSONObject = toActionJson(ActionType.EXPOSE)
 
     companion object {
         private val exposeMonitorMap = mutableMapOf<ITraceable, Timestamp>()
@@ -47,4 +47,23 @@ interface ITraceable {
             return true
         }
     }
+}
+
+/**
+ * Indicate that should trace while target invisible to users
+ */
+interface ITraceWhenInvisible
+
+/**
+ * Trace while target invisible, with exposed duration
+ */
+interface ITraceWhenInvisibleWithDuration : ITraceWhenInvisible {
+    var duration: Duration
+}
+
+/**
+ * Simple holder proxy of [ITraceWhenInvisibleWithDuration]
+ */
+class SimpleDuration : ITraceWhenInvisibleWithDuration {
+    override var duration: Duration = Duration.ZERO
 }

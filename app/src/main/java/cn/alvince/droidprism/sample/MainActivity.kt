@@ -8,9 +8,9 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import cn.alvince.droidprism.app.asLogPage
-import cn.alvince.droidprism.log.TraceSpot
 import cn.alvince.droidprism.sample.databinding.ActivityMainBinding
 import cn.alvince.droidprism.sample.log.CustomPrismLogcatSink
+import cn.alvince.droidprism.sample.trace.SampleTrace
 import cn.alvince.droidprism.util.traceExpose
 import com.google.android.material.snackbar.Snackbar
 
@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.toolbar)
 
         val navController = findNavController(R.id.nav_host_fragment_content_main)
@@ -38,7 +37,7 @@ class MainActivity : AppCompatActivity() {
                 .setAnchorView(R.id.fab)
                 .setAction("Action", null).show()
         }
-        binding.fab.traceExpose(asLogPage(), TraceSpot.of("fab_button"))
+        binding.fab.traceExpose(asLogPage(), SampleTrace("fab_button"))
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -18,7 +18,7 @@ import java.lang.ref.WeakReference
  *
  * @author alvince.zy@gmail.com
  */
-class ViewTraceHelper(internal val option: Option): Option.Observer {
+class ViewTraceHelper internal constructor(private val option: Option) : Option.Observer {
 
     var trace: ITraceable? by NullableProperty { value -> applyTraceItemChanged(value) }
 
@@ -83,11 +83,7 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
 
     private fun applyTraceItemChanged(trace: ITraceable?) {
         if (option.enableExposureTrace) {
-            val exposureHelper = viewExposureHelper
-                ?: exposureStateHelper?.run {
-                    createViewExposureHelper()
-                }
-            exposureHelper?.trace = trace
+            viewExposureHelper?.trace = trace
         }
     }
 
@@ -107,11 +103,13 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
 
     companion object {
 
+        @JvmStatic
         @MainThread
         fun clear(view: View) {
             from(view)?.deactivate()
         }
 
+        @JvmStatic
         @MainThread
         fun traceClickIfNeeded(view: View) {
             from(view)
@@ -122,6 +120,7 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
                 }
         }
 
+        @JvmStatic
         fun from(view: View): ViewTraceHelper? {
             return view.getTag(R.id.view_trace_helper_holder) as? ViewTraceHelper
         }
@@ -129,6 +128,7 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
         /**
          * Create [ViewTraceHelper] instance with exposure enable specified
          */
+        @JvmStatic
         fun create(enableExposure: Boolean = true): ViewTraceHelper {
             return Option().apply {
                 enableExposureTrace = enableExposure
@@ -139,7 +139,7 @@ class ViewTraceHelper(internal val option: Option): Option.Observer {
     }
 }
 
-class Option {
+internal class Option {
 
     interface Observer {
         fun onOptionChanged(optionName: String)
@@ -149,5 +149,5 @@ class Option {
 
     var enableExposureTrace: Boolean by ObservableProperty(true) { observer?.onOptionChanged("enableExposureTrace") }
 
-    internal var observer: Observer? = null
+    private var observer: Observer? = null
 }
