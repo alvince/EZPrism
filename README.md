@@ -18,6 +18,14 @@ dependencies {
 }
 ```
 
+Sample
+---
+
+运行 app 模块，`Logcat` tag: `EZPrism`
+
+- 查看事件触发日志：```emit trace: [${actionType.logType()}] $trace```
+- 埋点数据日志：[CustomPrismLogcatSink](app/src/main/java/cn/alvince/droidprism/sample/log/CustomPrismLogcatSink.kt) ```——> [custom sink] ${type.typeName} - $logData```
+
 使用
 ---
 
