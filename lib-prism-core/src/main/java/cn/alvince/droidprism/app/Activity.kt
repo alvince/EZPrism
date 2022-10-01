@@ -8,11 +8,18 @@ import androidx.collection.SparseArrayCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import cn.alvince.droidprism.EZPrism
-import cn.alvince.droidprism.internal.*
+import cn.alvince.droidprism.internal.Instrumentation
+import cn.alvince.droidprism.internal.getOrPut
 import cn.alvince.droidprism.internal.lifecycle.observeWith
+import cn.alvince.droidprism.internal.logDIfDebug
+import cn.alvince.droidprism.internal.postOnMain
+import cn.alvince.droidprism.internal.runOnMain
 import cn.alvince.droidprism.log.ExposureStateHelper
-import cn.alvince.droidprism.log.ILogPage
-import cn.alvince.droidprism.log.impl.LogPageDelegate
+import cn.alvince.droidprism.log.impl.LogPageEntryDelegate
+import cn.alvince.droidprism.log.page.ILogPage
+import cn.alvince.droidprism.log.page.LogPageManager
+import cn.alvince.droidprism.log.page.PageNameOf
+import cn.alvince.zanpakuto.core.text.orDefault
 import java.lang.ref.WeakReference
 
 /**
@@ -43,7 +50,7 @@ private val activityPageCache = SparseArrayCompat<ActivityPageRecord>()
 private fun Activity.obtainLogPage(name: String = ""): ILogPage {
     val k = this.hashCode()
     return activityPageCache.getOrPut(k) {
-        ActivityPageRecord(k, this, LogPageDelegate(name))
+        ActivityPageRecord(k, this, LogPageEntryDelegate().apply { setPageName(PageNameOf(name.orDefault(this@obtainLogPage::class.java.simpleName))) })
     }
         .page
 }
@@ -66,6 +73,9 @@ private class ActivityPageRecord(private val key: Int, activity: Activity, val p
     }
 
     override fun onActivityStarted(activity: Activity) {
+        if (activity === target.get()) {
+            LogPageManager.changePage(page)
+        }
     }
 
     override fun onActivityResumed(activity: Activity) {
@@ -94,16 +104,19 @@ private class ActivityPageRecord(private val key: Int, activity: Activity, val p
 
     private fun observeComponentActivity(activity: LifecycleOwner) {
         activity.observeWith { _, event ->
-            if (event < Lifecycle.Event.ON_PAUSE) {
-                dispatchPageShowChanged(true)
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                runOnMain { dispose() }
                 return@observeWith
             }
-            if (event < Lifecycle.Event.ON_DESTROY) {
+            if (event >= Lifecycle.Event.ON_PAUSE && event < Lifecycle.Event.ON_DESTROY) {
                 dispatchPageShowChanged(false)
                 return@observeWith
             }
-            if (event == Lifecycle.Event.ON_DESTROY) {
-                runOnMain { dispose() }
+            if (event >= Lifecycle.Event.ON_START && event < Lifecycle.Event.ON_PAUSE) {
+                if (event == Lifecycle.Event.ON_START) {
+                    LogPageManager.changePage(page)
+                }
+                dispatchPageShowChanged(true)
             }
         }
     }
@@ -117,7 +130,7 @@ private class ActivityPageRecord(private val key: Int, activity: Activity, val p
     }
 
     private fun dispatchPageShowChanged(show: Boolean) {
-        logDIfDebug { "dispatch page show: [$show] ${page.pageName().name} : ${target.get()}" }
+        logDIfDebug { "dispatch page show: [$show] ${page.pageName().id} : ${target.get()}" }
         page.onPageShowingChanged(show)
     }
 
@@ -125,7 +138,7 @@ private class ActivityPageRecord(private val key: Int, activity: Activity, val p
         if (_disposed) {
             return
         }
-        logDIfDebug { "dispose page: ${page.pageName().name}, ${target.get()}" }
+        logDIfDebug { "dispose page: ${page.pageName().id}, ${target.get()}" }
         page.onPageShowingChanged(false)
         _disposed = true
         postOnMain { activityPageCache.remove(key) }

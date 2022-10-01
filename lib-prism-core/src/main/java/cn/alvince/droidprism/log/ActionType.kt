@@ -11,6 +11,14 @@ import org.json.JSONObject
  */
 enum class ActionType(val typeName: String) {
 
+    PAGE_ENTER("page_enter") {
+        override fun traceToJson(trace: ITraceable): JSONObject = error("Unsupported, only indicate enter the log page")
+    },
+
+    PAGE_EXIT("page_exit") {
+        override fun traceToJson(trace: ITraceable): JSONObject = error("Unsupported, indicate exit log page only")
+    },
+
     /**
      * For click event
      */

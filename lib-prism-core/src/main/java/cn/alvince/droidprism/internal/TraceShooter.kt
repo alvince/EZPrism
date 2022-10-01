@@ -1,16 +1,17 @@
 package cn.alvince.droidprism.internal
 
 import cn.alvince.droidprism.log.ActionType
+import cn.alvince.droidprism.log.page.ILogPageEntry
 import org.json.JSONObject
 
 internal object TraceShooter {
 
-    fun pageEntry() {
-        TODO("sink page entry event trace")
+    fun pageEntry(pageEntry: ILogPageEntry) {
+//        Instrumentation.traverseSink { it.sink(ActionType.PAGE_ENTER, ) }
     }
 
-    fun pageExit() {
-        TODO("sink page exit event trace")
+    fun pageExit(pageEntry: ILogPageEntry) {
+        Instrumentation.traverseSink { it.sink(ActionType.PAGE_EXIT, pageEntry.content) }
     }
 
     fun sendWithCommonFields(type: ActionType, logData: JSONObject) {

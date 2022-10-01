@@ -2,7 +2,7 @@ package cn.alvince.droidprism.util
 
 import android.view.View
 import cn.alvince.droidprism.log.ExposureStateHelper
-import cn.alvince.droidprism.log.ILogPage
+import cn.alvince.droidprism.log.page.ILogPage
 import cn.alvince.droidprism.log.ITraceable
 import cn.alvince.droidprism.operator.ViewTraceHelper
 

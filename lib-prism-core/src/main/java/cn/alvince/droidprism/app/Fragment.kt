@@ -10,8 +10,11 @@ import cn.alvince.droidprism.internal.lifecycle.observeWith
 import cn.alvince.droidprism.internal.logDIfDebug
 import cn.alvince.droidprism.internal.postOnMain
 import cn.alvince.droidprism.log.ExposureStateHelper
-import cn.alvince.droidprism.log.ILogPage
-import cn.alvince.droidprism.log.impl.LogPageDelegate
+import cn.alvince.droidprism.log.impl.LogPageEntryDelegate
+import cn.alvince.droidprism.log.page.ILogPage
+import cn.alvince.droidprism.log.page.LogPageManager
+import cn.alvince.droidprism.log.page.PageNameOf
+import cn.alvince.zanpakuto.core.text.orDefault
 import java.lang.ref.WeakReference
 
 /**
@@ -42,7 +45,7 @@ private val fragmentPageCache = SparseArrayCompat<FragmentPageRecord>()
 private fun Fragment.obtainLogPage(name: String = ""): ILogPage {
     val k = this.hashCode()
     return fragmentPageCache.getOrPut(k) {
-        FragmentPageRecord(k, this, LogPageDelegate(name))
+        FragmentPageRecord(k, this, LogPageEntryDelegate().apply { setPageName(PageNameOf(name.orDefault(this@obtainLogPage::class.java.simpleName))) })
     }
         .page
 }
@@ -55,22 +58,25 @@ private class FragmentPageRecord(private val key: Int, fragment: Fragment, val p
 
     init {
         fragment.observeWith { _, event ->
-            if (event < Lifecycle.Event.ON_PAUSE) {
-                dispatchPageShowChanged(true)
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                dispose()
                 return@observeWith
             }
-            if (event < Lifecycle.Event.ON_DESTROY) {
+            if (event >= Lifecycle.Event.ON_PAUSE && event < Lifecycle.Event.ON_DESTROY) {
                 dispatchPageShowChanged(false)
                 return@observeWith
             }
-            if (event == Lifecycle.Event.ON_DESTROY) {
-                dispose()
+            if (event > Lifecycle.Event.ON_CREATE && event < Lifecycle.Event.ON_PAUSE) {
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    LogPageManager.changePage(page)
+                }
+                dispatchPageShowChanged(true)
             }
         }
     }
 
     private fun dispatchPageShowChanged(show: Boolean) {
-        logDIfDebug { "dispatch page show: [$show] ${page.pageName().name} : ${target.get()}" }
+        logDIfDebug { "dispatch page show: [$show] ${page.pageName().id} : ${target.get()}" }
         page.onPageShowingChanged(show)
     }
 
@@ -78,7 +84,7 @@ private class FragmentPageRecord(private val key: Int, fragment: Fragment, val p
         if (_disposed) {
             return
         }
-        logDIfDebug { "dispose page: ${page.pageName().name}, ${target.get()}" }
+        logDIfDebug { "dispose page: ${page.pageName().id}, ${target.get()}" }
         page.onPageShowingChanged(false)
         _disposed = true
         postOnMain { fragmentPageCache.remove(key) }
